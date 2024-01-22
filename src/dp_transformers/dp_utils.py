@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 from transformers import (
     Trainer, TrainerCallback, TrainerState, TrainerControl, logging,
     DataCollatorForLanguageModeling, PreTrainedTokenizer, training_args, modeling_utils, PreTrainedTokenizerBase,
-    PreTrainedModel,EvalPrediction
+    PreTrainedModel, EvalPrediction, DataCollator
 )
 from transformers.file_utils import is_sagemaker_mp_enabled, is_datasets_available
 import opacus
@@ -154,6 +154,7 @@ class OpacusDPTrainer(Trainer):
         model_init: Optional[Callable[[], PreTrainedModel]] = None,
         compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
         callbacks: Optional[List[TrainerCallback]] = None,
+        data_collator: Optional[DataCollator] = None,
         optimizers: Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR] = (None, None),
         preprocess_logits_for_metrics: Optional[Callable[[torch.Tensor, torch.Tensor], torch.Tensor]] = None,
         privacy_args: arguments.PrivacyArguments = None,
@@ -213,6 +214,7 @@ class OpacusDPTrainer(Trainer):
             callbacks=[self.dp_callback],
             optimizers=optimizers,
             preprocess_logits_for_metrics=preprocess_logits_for_metrics,
+            data_collator=data_collator,
             **kwargs
         )
 
