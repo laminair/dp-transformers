@@ -33,6 +33,7 @@ setup(
         "peft",
         "prv_accountant",
         "torch>=2.0.0",
+        "wandb>=0.16.0"
     ],
     test_suite="tests",
     zip_safe=False

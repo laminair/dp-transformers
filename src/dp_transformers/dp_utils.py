@@ -147,6 +147,13 @@ class OpacusDPTrainer(Trainer):
         model: Union[modeling_utils.PreTrainedModel, torch.nn.modules.module.Module] = None,
         args: arguments.TrainingArguments = None,
         train_dataset: Optional[torch.utils.data.dataset.Dataset] = None,
+        eval_dataset: Optional[torch.utils.data.dataset.Dataset] = None,
+        tokenizer: Optional[PreTrainedTokenizerBase] = None,
+        model_init: Optional[Callable[[], PreTrainedModel]] = None,
+        compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
+        callbacks: Optional[List[TrainerCallback]] = None,
+        optimizers: Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR] = (None, None),
+        preprocess_logits_for_metrics: Optional[Callable[[torch.Tensor, torch.Tensor], torch.Tensor]] = None,
         privacy_args: arguments.PrivacyArguments = None,
         author_mapping: Optional[Sequence[Sequence[int]]] = None,
         **kwargs: Dict
@@ -155,7 +162,7 @@ class OpacusDPTrainer(Trainer):
         self.train_args = args
         self.privacy_args = privacy_args
 
-        # Sample-level DP is equivalent to mapping each sample to a unique author. 
+        # Sample-level DP is equivalent to mapping each sample to a unique author.
         if author_mapping is None:
             author_mapping = [[i] for i in range(len(train_dataset))]
         self.author_mapping = author_mapping
@@ -192,7 +199,20 @@ class OpacusDPTrainer(Trainer):
             rdp_accountant=self.rdp_accountant,
             prv_accountant=self.prv_accountant
         )
-        super().__init__(model=model, args=args, train_dataset=train_dataset, callbacks=[self.dp_callback], **kwargs)
+        super().__init__(
+            model=model,
+            args=args,
+            data_collator: Optional[DataCollator] = None,
+            train_dataset=train_dataset,
+            eval_dataset: Optional[Union[Dataset, Dict[str, Dataset]]] = None,
+            tokenizer: Optional[PreTrainedTokenizerBase] = None,
+            model_init: Optional[Callable[[], PreTrainedModel]] = None,
+            compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
+            callbacks=[self.dp_callback],
+            optimizers: Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR] = (None, None),
+            preprocess_logits_for_metrics: Optional[Callable[[torch.Tensor, torch.Tensor], torch.Tensor]] = None,
+            **kwargs
+        )
 
         self.get_rdp_epsilon = lambda: self.rdp_accountant.get_epsilon(self.privacy_args.target_delta)  # RDP epsilon
         self.get_prv_epsilon = lambda: self.prv_accountant.compute_epsilon(self.state.global_step)[2]

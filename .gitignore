@@ -140,3 +140,5 @@ cython_debug/
 /data
 /.vscode
 /.amltconfig
+
+requirements.txt
