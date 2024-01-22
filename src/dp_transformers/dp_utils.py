@@ -9,7 +9,8 @@ from torch import nn
 from torch.utils.data import DataLoader
 from transformers import (
     Trainer, TrainerCallback, TrainerState, TrainerControl, logging,
-    DataCollatorForLanguageModeling, PreTrainedTokenizer, training_args, modeling_utils
+    DataCollatorForLanguageModeling, PreTrainedTokenizer, training_args, modeling_utils, PreTrainedTokenizerBase,
+    PreTrainedModel,EvalPrediction
 )
 from transformers.file_utils import is_sagemaker_mp_enabled, is_datasets_available
 import opacus
@@ -20,6 +21,7 @@ from typing import Any, Callable, List, Optional, Union, Dict, Sequence
 from accelerate.optimizer import AcceleratedOptimizer
 
 from dp_transformers import sampler, arguments
+from typing import Tuple
 
 logger = logging.get_logger(__name__)
 
@@ -199,18 +201,18 @@ class OpacusDPTrainer(Trainer):
             rdp_accountant=self.rdp_accountant,
             prv_accountant=self.prv_accountant
         )
+
         super().__init__(
             model=model,
             args=args,
-            data_collator: Optional[DataCollator] = None,
             train_dataset=train_dataset,
-            eval_dataset: Optional[Union[Dataset, Dict[str, Dataset]]] = None,
-            tokenizer: Optional[PreTrainedTokenizerBase] = None,
-            model_init: Optional[Callable[[], PreTrainedModel]] = None,
-            compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
+            eval_dataset=eval_dataset,
+            tokenizer=tokenizer,
+            model_init=model_init,
+            compute_metrics=compute_metrics,
             callbacks=[self.dp_callback],
-            optimizers: Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR] = (None, None),
-            preprocess_logits_for_metrics: Optional[Callable[[torch.Tensor, torch.Tensor], torch.Tensor]] = None,
+            optimizers=optimizers,
+            preprocess_logits_for_metrics=preprocess_logits_for_metrics,
             **kwargs
         )
 
