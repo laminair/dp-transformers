@@ -64,6 +64,8 @@ class DPCallback(TrainerCallback):
 
         self.on_substep_end_was_called = True
 
+        return control
+
     def on_step_end(self, args: training_args.TrainingArguments, state: TrainerState, control: TrainerControl, optimizer=None, **kwargs):
         if not (
             args.gradient_accumulation_steps <= 1 or
@@ -80,6 +82,7 @@ class DPCallback(TrainerCallback):
         optimizer.zero_grad()  # Opacus is bothered that HF does not call .zero_grad() on the optimizer
 
         self.rdp_accountant.step(noise_multiplier=self.noise_multiplier, sample_rate=self.sampling_probability)
+        return control
 
     def on_save(self, args: training_args.TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
         return self._check_max_epsilon_exceeded(state, control)
