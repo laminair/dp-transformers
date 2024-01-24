@@ -3,6 +3,7 @@
 
 import pandas as pd
 import datasets
+import wandb
 from datasets import Dataset
 import torch
 from torch import nn
@@ -82,6 +83,7 @@ class DPCallback(TrainerCallback):
         optimizer.zero_grad()  # Opacus is bothered that HF does not call .zero_grad() on the optimizer
 
         self.rdp_accountant.step(noise_multiplier=self.noise_multiplier, sample_rate=self.sampling_probability)
+        wandb.log({"global_step": state.global_step, "train/dp_epsilon": self.compute_rdp_epsilon()})
         return control
 
     def on_save(self, args: training_args.TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
